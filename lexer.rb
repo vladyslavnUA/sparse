@@ -1,5 +1,8 @@
+# Lexer - a tokenizer, the part of Sparse that converts the input, 
+# into tokens for the parser.
+
 class Lexer
-    KEYWORDS = ["def", "class", "if", "true", "false", "nil"]
+    KEYWORDS = ["def", "class", "if", "true", "false", "nil", "while"]
 
     # create a token for each element
     def tokenize(code):
