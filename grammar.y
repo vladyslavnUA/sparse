@@ -97,10 +97,12 @@ rule
         IDENTIFIER "(" ArgList ")"  { result = CallNode.new(val[0], val[2], val[4]) }
     ;
 
+
     ArgList:
       /* nothing */             { result = [] }
     | Expressions               { result = val }
     | ArgList "." Expression    { result = val[0] << val[2] }
+
 
     Operator:
     # Binary operators
@@ -108,3 +110,81 @@ rule
     | Expression '&&' Expression { result = CallNode.new(val[0], val[1], [val[2]]) }
     | Expression '==' Expression { result = CallNode.new(val[0], val[1], [val[2]]) }
     | Expression '!=' Expression { result = CallNode.new(val[0], val[1], [val[2]]) }
+    | Expression '>' Expression { result = CallNode.new(val[0], val[1], [val[2]]) }
+    | Expression '>=' Expression { result = CallNode.new(val[0], val[1], [val[2]]) }
+    | Expression '<' Expression { result = CallNode.new(val[0], val[1], [val[2]]) }
+    | Expression '<=' Expression { result = CallNode.new(val[0], val[1], [val[2]]) }
+    | Expression '+' Expression { result = CallNode.new(val[0], val[1], [val[2]]) }
+    | Expression '-' Expression { result = CallNode.new(val[0], val[1], [val[2]]) }
+    | Expression '*' Expression { result = CallNode.new(val[0], val[1], [val[2]]) }
+    | Expression '/' Expression { result = CallNode.new(val[0], val[1], [val[2]]) }
+    ;
+
+
+    Constant:
+      CONSTANT              { result = GetConstantNode.new(val[0]) }
+    ;
+
+
+    # Assignment to variable or constant
+    Assign:
+      IDENTIFIER "=" Expression     { result = SetLocalNode.new(val[0], val[2]) }
+    | CONSTANT "=" Expression       { result = SetConstantNode.new(val[0], val[2]) }
+    ;
+
+
+    # method definition
+    Process:
+      PROCESS IDENTIFIER Block      { result = ProcessNode.new(val[1], [], val[2]) }
+    | PROCESS IDENTIFIER
+        "(" ParamList ")" Block     { result = ProcessNode.new(val[1], val[3], val[5]) }
+    ;
+
+
+    ParamList:
+      /* nothing */                 { result = [] }
+    | IDENTIFIER                    { result = val }
+    | ParamList "," IDENTIFIER      { result = val[0] << val[2] }
+    ;
+
+
+    # Class definition
+    Class:
+      CLASS CONSTANT Block          { result = ClassNode.new(val[1], val[2]) }
+    ;
+
+
+    # if Block
+    If:
+      IF Expression Block           { result = IfNode.new(val[1], val[2]) }
+    ;
+
+
+    # A block of indented code. Work done by lexer.
+    Block:
+      INDENT Expressions DEDENT     { result = val[1] }
+    # If you don't like indentation you could replace the previous rule with the
+    # following one to separate blocks w/ curly brackets. You'll also need to remove the
+    # indentation magic section in the lexer.
+    # "{" Expressions "}"       { replace = val[1] }
+    ;
+end
+
+
+---- header
+  require "lexer"
+  require "nodes"
+
+---- inner
+
+  # code will be put as is in the Parser class
+  def parse(code, show_tokens=false)
+    @tokens = Lexer.new.tokenize(code)
+    puts @tokens.inspect if show_tokens
+    do_parse    # parsing process
+  end
+
+
+  def next_token
+    @tokens.shift
+  end
